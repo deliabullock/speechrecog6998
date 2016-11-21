@@ -5,7 +5,7 @@
 # text, and utt2spk are present in any of them.
 # It puts the original contents of data-dir into
 # data-dir/.backup
-
+echo "we here"
 if [ $# != 1 ]; then
   echo "Usage: utils/data/fix_data_dir.sh <data-dir>"
   echo "e.g.: utils/data/fix_data_dir.sh data/train"

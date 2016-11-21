@@ -17,8 +17,9 @@ set -e -o pipefail -u
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
 stage=0
-nj=30
-decode_nj=30
+nj=4
+decode_nj=2
+decode_num_threads=4
 min_seg_len=1.55
 train_set=train_cleaned
 gmm=tri3_cleaned  # this is the source gmm-dir for the data-type of interest; it
@@ -93,7 +94,7 @@ if [ $stage -le 13 ]; then
   rm $dir/.error || true 2>/dev/null
   for dset in dev test; do
    (
-    steps/nnet3/decode.sh --nj $decode_nj --cmd "$decode_cmd"  --num-threads 4 \
+    steps/nnet3/decode.sh --nj $decode_nj --cmd "$decode_cmd"  --num-threads $decode_num_threads
         --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
       ${graph_dir} data/${dset}_hires ${dir}/decode_${dset} || exit 1
     steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang data/lang_rescore \

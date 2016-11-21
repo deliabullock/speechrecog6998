@@ -15,8 +15,9 @@ set -e -o pipefail
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
 stage=0
-nj=30
-decode_nj=30
+nj=8
+decode_nj=2
+decode_num_threads=4
 min_seg_len=1.55
 train_set=train_cleaned
 gmm=tri3_cleaned  # the gmm for the target data
@@ -96,7 +97,7 @@ fi
 if [ $stage -le 15 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
-  steps/align_fmllr_lats.sh --nj 100 --cmd "$train_cmd" ${lores_train_data_dir} \
+  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" ${lores_train_data_dir} \
     data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
 fi
@@ -156,8 +157,8 @@ if [ $stage -le 18 ]; then
     --trainer.num-chunk-per-minibatch 128 \
     --trainer.frames-per-iter 1500000 \
     --trainer.num-epochs 4 \
-    --trainer.optimization.num-jobs-initial 2 \
-    --trainer.optimization.num-jobs-final 12 \
+    --trainer.optimization.num-jobs-initial 1 \
+    --trainer.optimization.num-jobs-final 1 \
     --trainer.optimization.initial-effective-lrate 0.001 \
     --trainer.optimization.final-effective-lrate 0.0001 \
     --trainer.max-param-change 2.0 \
@@ -166,6 +167,8 @@ if [ $stage -le 18 ]; then
     --tree-dir $tree_dir \
     --lat-dir $lat_dir \
     --dir $dir
+ #   --trainer.optimization.num-jobs-initial 2 \
+ #   --trainer.optimization.num-jobs-final 12 \
 fi
 
 
@@ -181,7 +184,7 @@ if [ $stage -le 20 ]; then
   rm $dir/.error 2>/dev/null || true
   for dset in dev test; do
       (
-      steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
+      steps/nnet3/decode.sh --num-threads $decode_num_threads --nj $decode_nj --cmd "$decode_cmd" \
           --acwt 1.0 --post-decode-acwt 10.0 \
           --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
           --scoring-opts "--min-lmwt 5 " \

@@ -9,7 +9,7 @@ set -e -o pipefail
 
 
 stage=0
-nj=30
+nj=8
 min_seg_len=1.55  # min length in seconds... we do this because chain training
                   # will discard segments shorter than 1.5 seconds.   Must remain in sync
                   # with the same option given to prepare_lores_feats_and_alignments.sh
@@ -140,7 +140,7 @@ if [ $stage -le 5 ]; then
 
   echo "$0: training the diagonal UBM."
   # Use 512 Gaussians in the UBM.
-  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 \
+  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj $nj \
     --num-frames 700000 \
     --num-threads $num_threads_ubm \
     ${temp_data_root}/${train_set}_sp_hires_subset 512 \
@@ -152,7 +152,7 @@ if [ $stage -le 6 ]; then
   # can be sensitive to the amount of data.  The script defaults to an iVector dimension of
   # 100.
   echo "$0: training the iVector extractor"
-  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 10 \
+  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj \
     data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm exp/nnet3${nnet3_affix}/extractor || exit 1;
 fi
 

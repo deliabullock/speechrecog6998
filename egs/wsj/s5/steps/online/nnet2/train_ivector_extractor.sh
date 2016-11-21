@@ -32,12 +32,15 @@
 #    may want more jobs, though.
 
 # Begin configuration section.
-nj=10   # this is the number of separate queue jobs we run, but each one 
+nj=1   # this is the number of separate queue jobs we run, but each one 
         # contains num_processes sub-jobs.. the real number of threads we 
         # run is nj * num_processes * num_threads, and the number of
         # separate pieces of data is nj * num_processes.
-num_threads=4
-num_processes=4 # each job runs this many processes, each with --num-threads threads
+# Setting the number of threads and process to 1 and letting the caller 
+# set the number of jobs(nj) to make this consistent with the rest of the
+# pipeline
+num_threads=1
+num_processes=1 # each job runs this many processes, each with --num-threads threads
 cmd="run.pl"
 stage=-4
 ivector_dim=100 # dimension of the extracted i-vector

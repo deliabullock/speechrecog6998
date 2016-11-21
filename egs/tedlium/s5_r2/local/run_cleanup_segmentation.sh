@@ -25,8 +25,8 @@ cleanup_stage=0
 data=data/train
 cleanup_affix=cleaned
 srcdir=exp/tri3
-nj=100
-decode_nj=16
+nj=8
+decode_nj=2
 decode_num_threads=4
 
 . ./path.sh
@@ -38,20 +38,28 @@ cleaned_data=${data}_${cleanup_affix}
 dir=${srcdir}_${cleanup_affix}_work
 cleaned_dir=${srcdir}_${cleanup_affix}
 
+run_stage=0
+
 if [ $stage -le 1 ]; then
   # This does the actual data cleanup.
   steps/cleanup/clean_and_segment_data.sh --stage $cleanup_stage --nj $nj --cmd "$train_cmd" \
     $data data/lang $srcdir $dir $cleaned_data
+  run_stage=$run_stage+1
+  echo "$0: Finished stage $run_stage"
 fi
 
 if [ $stage -le 2 ]; then
   steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
     $cleaned_data data/lang $srcdir ${srcdir}_ali_${cleanup_affix}
+  run_stage=$run_stage+1
+  echo "$0: Finished stage $run_stage"
 fi
 
 if [ $stage -le 3 ]; then
   steps/train_sat.sh --cmd "$train_cmd" \
     5000 100000 $cleaned_data data/lang ${srcdir}_ali_${cleanup_affix} ${cleaned_dir}
+  run_stage=$run_stage+1
+  echo "$0: Finished stage $run_stage"
 fi
 
 if [ $stage -le 4 ]; then
@@ -65,4 +73,6 @@ if [ $stage -le 4 ]; then
     steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang data/lang_rescore \
        data/${dset} ${cleaned_dir}/decode_${dset} ${cleaned_dir}/decode_${dset}_rescore
   done
+  run_stage=$run_stage+1
+  echo "$0: Finished stage $run_stage"
 fi

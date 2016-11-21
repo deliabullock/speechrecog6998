@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+echo "in validate_data_dir"
+
 no_feats=false
 no_wav=false
 no_text=false
